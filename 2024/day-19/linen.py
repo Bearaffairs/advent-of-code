@@ -3,6 +3,8 @@
 import argparse
 import datetime as dt
 
+from functools import cache
+
 class Node:
     def __init__(self, leaf=True):
         self.leaf = leaf
@@ -44,19 +46,23 @@ class Trie:
 
         return root.leaf
 
+    @cache
     def search(self, word):
 
-        # First check if the entire word is valid
-        if self.isValid(word):
-            return True
+        length = len(word)
 
-        for i in range(len(word) - 1, 0, -1):
-            # Try validate earlier sections of the word
+        # Base case
+        if length == 0:
+            return 1
+
+        combinations = 0
+
+        for i in range(1, length+1):
             if self.isValid(word[:i]):
-                # If the earlier prefix is valid, search the remainder for validity.
-                if self.search(word[i:]):
-                    return True
-        return False
+                # If the prefix is valid get all suffix
+                combinations += self.search(word[i:])
+
+        return combinations
 
 def linen(file):
 
@@ -66,24 +72,28 @@ def linen(file):
 
         towels = Trie()
 
+        print(f'{patterns=}')
+
         for pattern in patterns:
             towels.insert(pattern)
 
         valid_designs = 0
+        valid_combinations = 0
 
         start = dt.datetime.now()
 
         for line in fIO.readlines():
             design = line.strip()
 
-            valid = towels.search(design)
-            print(f'{design=} {valid=}')
+            combos = towels.search(design)
+            print(f'{design=} {combos=}')
 
-            if valid:
+            if combos:
+                valid_combinations += combos
                 valid_designs += 1
 
         end = dt.datetime.now()
-        print(f'{valid_designs=}, {end-start}')
+        print(f'{valid_designs=}, {valid_combinations=}, {end-start}')
 
 if __name__ == '__main__':
 
